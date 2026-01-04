@@ -158,11 +158,4 @@ This project is licensed under the MIT License and is free to use, modify, and d
 
 ---
 
-Contact
 
-Author: Mehrnaz Mostafavi  
-Email: your email here  
-LinkedIn: your LinkedIn profile  
-Portfolio: optional  
-
-If you have questions, feedback, or collaboration ideas, feel free to reach out.
