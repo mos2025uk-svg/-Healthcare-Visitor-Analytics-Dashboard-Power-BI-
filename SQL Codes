@@ -1,0 +1,186 @@
+/* ===============================
+   HEALTHCARE KPI SQL QUERIES
+   =============================== */
+
+/* Total Visitors */
+SELECT COUNT(DISTINCT VisitorID) AS Total_Visitors
+FROM Hospital_Visitors;
+
+
+/* Average Wait Time (Minutes) */
+SELECT ROUND(AVG(WaitTime), 2) AS Avg_Wait_Time_Minutes
+FROM Hospital_Visitors;
+
+
+/* Average Satisfaction Score */
+SELECT ROUND(AVG(SatisfactionScore), 2) AS Avg_Satisfaction_Score
+FROM Hospital_Visitors;
+
+
+/* Daily Visit Trend */
+SELECT
+    CAST(VisitDate AS DATE) AS Visit_Day,
+    COUNT(*) AS Daily_Visits
+FROM Hospital_Visitors
+GROUP BY CAST(VisitDate AS DATE)
+ORDER BY Visit_Day;
+
+
+/* Monthly Visit Trend */
+SELECT
+    YEAR(VisitDate) AS Year,
+    MONTH(VisitDate) AS Month,
+    COUNT(*) AS Monthly_Visits
+FROM Hospital_Visitors
+GROUP BY YEAR(VisitDate), MONTH(VisitDate)
+ORDER BY Year, Month;
+
+
+/* Year-over-Year Visit Growth */
+WITH YearlyVisits AS (
+    SELECT
+        YEAR(VisitDate) AS Year,
+        COUNT(*) AS Visits
+    FROM Hospital_Visitors
+    GROUP BY YEAR(VisitDate)
+)
+SELECT
+    y1.Year,
+    y1.Visits,
+    ROUND(
+        (y1.Visits - y0.Visits) * 100.0 / y0.Visits,
+        2
+    ) AS YoY_Growth_Percentage
+FROM YearlyVisits y1
+LEFT JOIN YearlyVisits y0
+    ON y1.Year = y0.Year + 1;
+
+
+/* Quarterly Visits */
+SELECT
+    YEAR(VisitDate) AS Year,
+    DATEPART(QUARTER, VisitDate) AS Quarter,
+    COUNT(*) AS Quarterly_Visits
+FROM Hospital_Visitors
+GROUP BY YEAR(VisitDate), DATEPART(QUARTER, VisitDate)
+ORDER BY Year, Quarter;
+
+
+/* AM vs PM Distribution */
+SELECT
+    Moment,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY Moment;
+
+
+/* Weekday vs Weekend Distribution */
+SELECT
+    DayType,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY DayType;
+
+
+/* Average Wait Time Distribution */
+SELECT
+    CASE
+        WHEN WaitTime BETWEEN 10 AND 20 THEN '10-20 Minutes'
+        WHEN WaitTime BETWEEN 20 AND 60 THEN '20-60 Minutes'
+        ELSE '60+ Minutes'
+    END AS Wait_Time_Category,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY
+    CASE
+        WHEN WaitTime BETWEEN 10 AND 20 THEN '10-20 Minutes'
+        WHEN WaitTime BETWEEN 20 AND 60 THEN '20-60 Minutes'
+        ELSE '60+ Minutes'
+    END;
+
+
+/* Age Group Distribution */
+SELECT
+    CASE
+        WHEN Age < 18 THEN '0-17'
+        WHEN Age BETWEEN 18 AND 35 THEN '18-35'
+        WHEN Age BETWEEN 36 AND 55 THEN '36-55'
+        WHEN Age BETWEEN 56 AND 75 THEN '56-75'
+        ELSE '75+'
+    END AS Age_Group,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY
+    CASE
+        WHEN Age < 18 THEN '0-17'
+        WHEN Age BETWEEN 18 AND 35 THEN '18-35'
+        WHEN Age BETWEEN 36 AND 55 THEN '36-55'
+        WHEN Age BETWEEN 56 AND 75 THEN '56-75'
+        ELSE '75+'
+    END;
+
+
+/* Gender Distribution */
+SELECT
+    Gender,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY Gender;
+
+
+/* Race Distribution */
+SELECT
+    Race,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY Race
+ORDER BY Percentage DESC;
+
+
+/* Department Referral Distribution */
+SELECT
+    Department,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY Department
+ORDER BY Percentage DESC;
+
+
+/* Admin Flag (Patient vs Non-Patient) */
+SELECT
+    AdminFlag,
+    COUNT(*) AS Visits,
+    ROUND(
+        COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (),
+        2
+    ) AS Percentage
+FROM Hospital_Visitors
+GROUP BY AdminFlag;
