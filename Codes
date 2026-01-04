@@ -1,0 +1,195 @@
+I’ll cover the three most important parts for a Power BI Healthcare KPI project:
+
+SQL codes (for KPIs and trends)
+
+DAX measures (inside Power BI)
+
+Power Query (M) examples (ETL & cleaning)
+
+This gives you an end-to-end, portfolio-ready solution.
+
+1️⃣ SQL CODES FOR HEALTHCARE KPIs (with explanation)
+
+Assume the main table is called:
+
+Hospital_Visitors
+
+Total Visitors (KPI Card)
+SELECT COUNT(DISTINCT VisitorID) AS Total_Visitors
+FROM Hospital_Visitors;
+
+
+Explanation:
+Counts unique visitors to measure overall hospital traffic. Used as a high-level KPI.
+
+Average Wait Time
+SELECT ROUND(AVG(WaitTime), 2) AS Avg_Wait_Time_Minutes
+FROM Hospital_Visitors;
+
+
+Explanation:
+Calculates the average waiting time in minutes. This KPI highlights operational efficiency and bottlenecks.
+
+Average Satisfaction Score
+SELECT ROUND(AVG(SatisfactionScore), 2) AS Avg_Satisfaction
+FROM Hospital_Visitors;
+
+
+Explanation:
+Measures overall patient satisfaction. A score around 5 indicates neutral experience and room for improvement.
+
+Weekday vs Weekend Visits
+SELECT
+    DayType,
+    COUNT(*) AS Visits,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS Percentage
+FROM Hospital_Visitors
+GROUP BY DayType;
+
+
+Explanation:
+Compares weekday and weekend traffic to support staffing and scheduling decisions.
+
+Monthly Visit Trend
+SELECT
+    YEAR(VisitDate) AS Year,
+    MONTH(VisitDate) AS Month,
+    COUNT(*) AS Monthly_Visits
+FROM Hospital_Visitors
+GROUP BY YEAR(VisitDate), MONTH(VisitDate)
+ORDER BY Year, Month;
+
+
+Explanation:
+Shows seasonal patterns in hospital visits, useful for capacity planning.
+
+Department Referral Distribution
+SELECT
+    Department,
+    COUNT(*) * 100.0 / SUM(COUNT(*)) OVER () AS Percentage
+FROM Hospital_Visitors
+GROUP BY Department
+ORDER BY Percentage DESC;
+
+
+Explanation:
+Identifies which departments receive the most referrals and highlights non-referred traffic.
+
+2️⃣ DAX MEASURES FOR POWER BI (with explanation)
+
+These are created inside Power BI → Modeling → New Measure.
+
+Total Visitors
+Total Visitors = DISTINCTCOUNT(Hospital_Visitors[VisitorID])
+
+
+Explanation:
+Counts unique visitors dynamically based on filters and slicers.
+
+Average Wait Time
+Average Wait Time = AVERAGE(Hospital_Visitors[WaitTime])
+
+
+Explanation:
+Used in KPI cards and trend charts to monitor service efficiency.
+
+Weekday vs Weekend Percentage
+Visit Percentage =
+DIVIDE(
+    COUNTROWS(Hospital_Visitors),
+    CALCULATE(COUNTROWS(Hospital_Visitors), ALL(Hospital_Visitors))
+)
+
+
+Explanation:
+Calculates visit proportions, useful for donut and bar charts.
+
+Year-over-Year Growth
+YoY Growth (%) =
+VAR CurrentYearVisits = COUNTROWS(Hospital_Visitors)
+VAR PreviousYearVisits =
+    CALCULATE(
+        COUNTROWS(Hospital_Visitors),
+        SAMEPERIODLASTYEAR(Hospital_Visitors[VisitDate])
+    )
+RETURN
+DIVIDE(CurrentYearVisits - PreviousYearVisits, PreviousYearVisits)
+
+
+Explanation:
+Measures hospital growth year over year, a key performance indicator for management.
+
+Average Satisfaction Score
+Average Satisfaction =
+AVERAGE(Hospital_Visitors[SatisfactionScore])
+
+
+Explanation:
+Tracks patient experience and quality of care.
+
+3️⃣ POWER QUERY (M) CODES FOR ETL (with explanation)
+
+Used in Power Query Editor → Advanced Editor.
+
+Remove Null Values in Wait Time
+= Table.SelectRows(Source, each [WaitTime] <> null)
+
+
+Explanation:
+Ensures missing wait times do not distort averages and KPIs.
+
+Create Age Groups
+= Table.AddColumn(
+    Source,
+    "Age Group",
+    each
+        if [Age] < 18 then "0-17"
+        else if [Age] <= 35 then "18-35"
+        else if [Age] <= 55 then "36-55"
+        else if [Age] <= 75 then "56-75"
+        else "75+"
+)
+
+
+Explanation:
+Transforms raw age data into meaningful demographic categories.
+
+Create Weekday / Weekend Column
+= Table.AddColumn(
+    Source,
+    "Day Type",
+    each if Date.DayOfWeek([VisitDate], Day.Monday) < 5
+    then "Weekday"
+    else "Weekend"
+)
+
+
+Explanation:
+Enables comparison between weekday and weekend visits.
+
+Standardize Gender Values
+= Table.ReplaceValue(
+    Source,
+    "M",
+    "Male",
+    Replacer.ReplaceText,
+    {"Gender"}
+)
+
+
+Explanation:
+Improves data consistency for accurate demographic analysis.
+
+✅ Final Summary
+
+This complete code set allows you to:
+
+Build KPI cards (visitors, wait time, satisfaction)
+
+Analyze time-based trends (daily, monthly, yearly)
+
+Explore demographics and department performance
+
+Apply professional ETL and data modeling practices
+
+Deliver a recruiter-ready Power BI healthcare dashboard
